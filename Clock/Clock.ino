@@ -1,5 +1,6 @@
 #include "MD_DS1307.h"
 
+
 #define latchPinH 3
 #define clockPinH 2
 #define dataPinH 4
@@ -9,6 +10,8 @@
 #define latchPinS 9
 #define clockPinS 8
 #define dataPinS 10
+#define SDA 14
+#define SCL 15
 
 #define zero 0b1000 
 #define one 0b0000
@@ -21,12 +24,20 @@
 #define eight 0b1100
 #define nine 0b1110
 
+int hour;
+int minute;
+int second;
+
 int onesS;
 int tensS;
 int onesM;
 int tensM;
 int onesH;
 int tensH;
+
+byte hourB;
+byte minuteB;
+byte secondB;
 
 byte byteDecode (int time) {
   switch (time) {
@@ -80,9 +91,33 @@ void setup() {
   pinMode(latchPinH, OUTPUT);
   pinMode(clockPinH, OUTPUT);
   pinMode(dataPinH, OUTPUT);
+  pinMode(SDA, OUTPUT);
+  pinMode(SCL, OUTPUT);
+  Serial.begin(9600);
+//yyyy, mm, dd, h, m, s, dow, pm
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  
+  RTC.readTime();
+  hour = RTC.h;
+  minute = RTC.m;
+  second = RTC.s;
+  tensH = (hour / 10) % 10;
+  onesH = hour % 10;
+  tensM = (minute / 10) % 10;
+  onesM = minute % 10;
+  tensS = (second / 10) % 10;
+  onesS = second % 10;
+  secondB = byteCombine(onesS, tensS);
+  minuteB = byteCombine(onesM, tensM);
+  hourB = byteCombine(onesH, tensH);
+  digitalWrite(latchPinS, LOW);
+  digitalWrite(latchPinM, LOW);
+  digitalWrite(latchPinH, LOW);
+  shiftOut(dataPinS, clockPinS, LSBFIRST, secondB);
+  shiftOut(dataPinM, clockPinM, LSBFIRST, minuteB);
+  shiftOut(dataPinH, clockPinH, LSBFIRST, hourB);
+  digitalWrite(latchPinS, HIGH);
+  digitalWrite(latchPinM, HIGH);
+  digitalWrite(latchPinH, HIGH);  
 }
